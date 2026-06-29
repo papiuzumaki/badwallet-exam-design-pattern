@@ -42,7 +42,7 @@ public class WalletService {
     public void seedDatabase(int numWallets, int eventsPerWallet) {
         Random random = new Random();
         for (int i = 0; i < numWallets; i++) {
-            String phone = "+22177" + String.format("%07d", i + 1);
+            String phone = "77" + String.format("%07d", i + 1);
             if (walletRepository.existsByPhoneNumber(phone)) continue;
 
             Wallet wallet = walletRepository.save(Wallet.builder()
