@@ -1,6 +1,8 @@
 package com.badwallet.service;
 
 import com.badwallet.dto.*;
+import com.badwallet.exception.InsufficientBalanceException;
+import com.badwallet.exception.WalletException;
 import com.badwallet.model.Wallet;
 import com.badwallet.model.WalletTransaction;
 import com.badwallet.model.TransactionType;
@@ -88,7 +90,7 @@ public class WalletService {
 
     public Wallet getWalletByPhone(String phone) {
         return walletRepository.findByPhoneNumber(phone)
-                .orElseThrow(() -> new RuntimeException("Wallet non trouvé : " + phone));
+                .orElseThrow(() -> new WalletException("Wallet non trouvé avec le numéro : " + phone));
     }
 
     public Double getBalance(String phone) {
@@ -98,7 +100,7 @@ public class WalletService {
     @Transactional
     public WalletTransaction deposit(Long walletId, DepositRequest req) {
         Wallet wallet = walletRepository.findById(walletId)
-                .orElseThrow(() -> new RuntimeException("Wallet non trouvé : " + walletId));
+                .orElseThrow(() -> new WalletException("Wallet non trouvé avec l'id : " + walletId));
 
         // Strategy Pattern : délègue à la stratégie appropriée
         depositStrategyFactory.getStrategy(req.getPaymentMethod())
@@ -132,7 +134,7 @@ public class WalletService {
         double total = req.getAmount() + fees;
 
         if (wallet.getBalance() < total) {
-            throw new RuntimeException("Solde insuffisant. Besoin : " + total + " | Disponible : " + wallet.getBalance());
+            throw new InsufficientBalanceException(total, wallet.getBalance());
         }
 
         double before = wallet.getBalance();
@@ -160,7 +162,7 @@ public class WalletService {
         Wallet receiver = getWalletByPhone(req.getReceiverPhone());
 
         if (sender.getBalance() < req.getAmount()) {
-            throw new RuntimeException("Solde insuffisant pour le transfert");
+            throw new InsufficientBalanceException(req.getAmount(), sender.getBalance());
         }
 
         double senderBefore = sender.getBalance();
@@ -237,7 +239,7 @@ public class WalletService {
 
     private void deductPayment(Wallet wallet, Double amount, String serviceName) {
         if (wallet.getBalance() < amount) {
-            throw new RuntimeException("Solde insuffisant pour le paiement");
+            throw new InsufficientBalanceException(amount, wallet.getBalance());
         }
         double before = wallet.getBalance();
         wallet.setBalance(before - amount);
