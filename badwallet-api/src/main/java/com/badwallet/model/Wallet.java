@@ -1,5 +1,6 @@
 package com.badwallet.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -33,6 +34,7 @@ public class Wallet {
 
     private LocalDateTime createdAt;
 
+    @JsonManagedReference
     @OneToMany(mappedBy = "wallet", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<WalletTransaction> transactions;
 
